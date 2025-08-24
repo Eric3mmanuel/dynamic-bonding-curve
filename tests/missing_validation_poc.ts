@@ -29,7 +29,7 @@ describe("PoC: missing mint validation in transfer_from_user", () => {
         tokenMint: mintA,
         tokenOwnerAccount: userTokenA,
         destinationTokenAccount: attackerAccountB, // malicious
-        tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+        tokenProgram: anchor.utils.token.TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA,
       })
       .rpc();
 
