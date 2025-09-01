@@ -20,7 +20,7 @@ describe("PoC: Trigger unwrap panic in swap path", () => {
 
     // 2. Initialize pool with huge liquidity in config via createPoolWithSplToken
     const configPubkey = Keypair.generate().publicKey;
-    const quoteMint = anchor.web3.Keypair.generate().publicKey; // or some valid mint
+    const quoteMint = anchor.web3.Keypair.generate().publicKey;
 
     const pool = await createPoolWithSplToken(
       provider.connection,
