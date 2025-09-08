@@ -1,10 +1,10 @@
 import * as anchor from "@coral-xyz/anchor";
 import { assert } from "chai";
-import { VolatilityTracker } from "../target/types/meteora_ag"; // adjust import path if needed
+import { VolatilityTracker } from "../target/types/meteora_ag"; 
 
 describe("VolatilityTracker timestamp bug", () => {
   it("demonstrates that last_update_timestamp is never updated", async () => {
-    // Create a mock dynamic fee config
+    // This creates a mock dynamic fee config
     const dynamicFeeConfig = {
       bin_step_u128: new anchor.BN(1),
       max_volatility_accumulator: new anchor.BN(1_000_000),
@@ -13,7 +13,7 @@ describe("VolatilityTracker timestamp bug", () => {
       reduction_factor: 5000,
     };
 
-    // Initialize VolatilityTracker
+    // Initializes VolatilityTracker
     const tracker: any = {
       last_update_timestamp: new anchor.BN(1000), // "last update" set to 1000
       sqrt_price_reference: new anchor.BN(1),
