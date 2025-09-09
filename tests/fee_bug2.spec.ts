@@ -1,7 +1,8 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { assert } from "chai";
-import { Meteora } from "../target/types/meteora"; // adjust program name if needed
+import { Meteora } from "../target/types/meteora"; 
+
 
 describe("divide-by-zero in get_delta_bin_id", () => {
   // Configures the client
