@@ -4,14 +4,14 @@ import { assert } from "chai";
 import { Meteora } from "../target/types/meteora"; // adjust program name if needed
 
 describe("divide-by-zero in get_delta_bin_id", () => {
-  // Configure the client
+  // Configures the client
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
   const program = anchor.workspace.Meteora as Program<Meteora>;
 
   it("should revert when bin_step_u128 = 0", async () => {
     try {
-      // Attempt to call an instruction that internally triggers get_delta_bin_id
+      // Attempts to call an instruction that internally triggers get_delta_bin_id
       // (for example: volatility tracking / updateReferences)
       await program.methods
         .updateReferences(
